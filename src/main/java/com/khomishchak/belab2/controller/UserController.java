@@ -1,42 +1,47 @@
 package com.khomishchak.belab2.controller;
 
 import com.khomishchak.belab2.model.User;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import com.khomishchak.belab2.repository.UserRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 @RestController
+@RequestMapping("/users")
 public class UserController {
 
-    private final Map<Long, User> users = new HashMap<>();
-    private Long idCounter = 1L;
+    private final UserRepository userRepository;
 
-    @PostMapping("/user")
-    public User createUser(@RequestBody User user) {
-        user.setId(idCounter++);
-        users.put(user.getId(), user);
-        return user;
+    public UserController(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
-    @GetMapping("/user/{userId}")
-    public User getUser(@PathVariable Long userId) {
-        return users.getOrDefault(userId, null);
+    @PostMapping
+    public ResponseEntity<User> createUser(@RequestBody User user) {
+        User savedUser = userRepository.save(user);
+        return ResponseEntity.ok(savedUser);
     }
 
-    @GetMapping("/users")
-    public Collection<User> getAllUsers() {
-        return users.values();
+    @GetMapping("/{userId}")
+    public ResponseEntity<User> getUser(@PathVariable Long userId) {
+        return userRepository.findById(userId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/user/{userId}")
-    public void deleteUser(@PathVariable Long userId) {
-        users.remove(userId);
+    @GetMapping
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+        if (userRepository.existsById(userId)) {
+            userRepository.deleteById(userId);
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

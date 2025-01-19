@@ -8,3 +8,15 @@ services:
     ports:
       - "8080:8080"
     restart: always
+    depends_on:
+      - db
+  db:
+    image: postgres:13
+    container_name: income-db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: income_db
+    ports:
+      - "5433:5432"
